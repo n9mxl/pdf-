@@ -4,6 +4,7 @@ import io
 import img2pdf
 
 def enhance_image(img):
+    """이미지 업스케일 + 선명도 + 대비 강화"""
     img = img.resize((img.width*2, img.height*2), Image.LANCZOS)
     img = img.filter(ImageFilter.UnsharpMask(radius=2, percent=200, threshold=1))
     enhancer = ImageEnhance.Contrast(img)
@@ -11,6 +12,7 @@ def enhance_image(img):
     return img
 
 def enhance_pdf(pdf_file):
+    """PDF → 이미지 업스케일 → PDF 재생성"""
     pdf_bytes = pdf_file.read()
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     images_bufs = []
