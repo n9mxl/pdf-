@@ -1,7 +1,4 @@
-streamlit
-pillow
-img2pdf
-torch          # Real-ESRGAN용
-basicsr        # Real-ESRGAN 의존
-realesrgan     # 업스케일용
-opencv-python
+streamlit>=1.25.0
+pillow>=10.0.0
+img2pdf>=0.4.3
+opencv-python>=4.8.0
