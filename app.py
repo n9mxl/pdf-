@@ -1,32 +1,20 @@
-from pdf2image import convert_from_bytes
-from PIL import Image, ImageEnhance, ImageFilter
-import io
-import img2pdf
+import streamlit as st
+from pdf_enhancer import enhance_pdf
 
-def enhance_image(img):
-    """이미지 업스케일 + 선명도 + 대비 강화"""
-    img = img.resize((img.width*2, img.height*2), Image.LANCZOS)
-    img = img.filter(ImageFilter.UnsharpMask(radius=2, percent=200, threshold=1))
-    enhancer = ImageEnhance.Contrast(img)
-    img = enhancer.enhance(1.2)
-    return img
+st.set_page_config(page_title="PDF → 최대 화질 PDF", layout="wide")
+st.title("📄 PDF → 최대 화질 PDF 변환기 (CPU 전용)")
 
-def enhance_pdf(pdf_file):
-    """PDF → 이미지 업스케일 → PDF 재생성"""
-    # PDF를 이미지로 변환 (dpi 높게 설정)
-    pages = convert_from_bytes(pdf_file.read(), dpi=300)
+uploaded_pdf = st.file_uploader("PDF 파일 업로드", type=["pdf"])
 
-    images_bufs = []
-    for page in pages:
-        img = page.convert("RGB")
-        img = enhance_image(img)
+if uploaded_pdf:
+    if st.button("최대 화질 PDF 변환"):
+        with st.spinner("PDF 변환 중... 잠시만 기다려주세요"):
+            st.session_state['highres_pdf'] = enhance_pdf(uploaded_pdf)
+        st.success("PDF 변환 완료 ✅")
 
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=100)  # JPEG 품질 최대
-        buf.seek(0)
-        images_bufs.append(buf)
-
-    # PDF 재생성 (300 DPI)
-    layout_fun = img2pdf.get_layout_fun(dpi=300)
-    highres_pdf = io.BytesIO(img2pdf.convert([buf for buf in images_bufs], layout_fun=layout_fun))
-    return highres_pdf
+if 'highres_pdf' in st.session_state:
+    st.download_button(
+        "PDF 다운로드",
+        data=st.session_state['highres_pdf'],
+        file_name="highres_converted.pdf"
+    )
