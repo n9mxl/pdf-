@@ -4,6 +4,7 @@ from pdf_enhancer import enhance_pdf
 st.set_page_config(page_title="PDF → 최대 화질 PDF", layout="wide")
 st.title("📄 PDF → 최대 화질 PDF 변환기 (CPU 전용)")
 
+# PDF 업로드
 uploaded_pdf = st.file_uploader("PDF 파일 업로드", type=["pdf"])
 
 if uploaded_pdf:
@@ -12,6 +13,7 @@ if uploaded_pdf:
             st.session_state['highres_pdf'] = enhance_pdf(uploaded_pdf)
         st.success("PDF 변환 완료 ✅")
 
+# 변환 완료 후 다운로드 버튼 (DOM 오류 방지)
 if 'highres_pdf' in st.session_state:
     st.download_button(
         "PDF 다운로드",
