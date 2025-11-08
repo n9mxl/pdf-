@@ -1,25 +1,23 @@
-from pdf2image import convert_from_bytes
+import fitz  # PyMuPDF
 from PIL import Image, ImageEnhance, ImageFilter
 import io
 import img2pdf
 
 def enhance_image(img):
-    # 2배 업스케일
     img = img.resize((img.width*2, img.height*2), Image.LANCZOS)
-    # 선명도 필터
     img = img.filter(ImageFilter.UnsharpMask(radius=2, percent=200, threshold=1))
-    # 대비 향상
     enhancer = ImageEnhance.Contrast(img)
     img = enhancer.enhance(1.2)
     return img
 
 def enhance_pdf(pdf_file):
-    # PDF → 이미지 변환 (dpi 높게 설정)
-    pages = convert_from_bytes(pdf_file.read(), dpi=300)
+    pdf_bytes = pdf_file.read()
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     images_bufs = []
 
-    for page in pages:
-        img = page.convert("RGB")
+    for page in doc:
+        pix = page.get_pixmap(dpi=300)
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         img = enhance_image(img)
 
         buf = io.BytesIO()
@@ -27,7 +25,5 @@ def enhance_pdf(pdf_file):
         buf.seek(0)
         images_bufs.append(buf)
 
-    # 이미지 → PDF 재생성 (300 DPI)
-    layout_fun = img2pdf.get_layout_fun(dpi=300)
-    highres_pdf = io.BytesIO(img2pdf.convert([buf for buf in images_bufs], layout_fun=layout_fun))
+    highres_pdf = io.BytesIO(img2pdf.convert([buf for buf in images_bufs], dpi=300))
     return highres_pdf
