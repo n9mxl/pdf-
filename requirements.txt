@@ -2,3 +2,6 @@ streamlit>=1.25.0
 pillow>=10.0.0
 img2pdf>=0.4.3
 opencv-python>=4.8.0
+torch>=2.0.0          # GPU 환경에서 Real-ESRGAN 사용 시
+basicsr>=1.4.2        # Real-ESRGAN 의존
+realesrgan>=0.3.0     # Real-ESRGAN
