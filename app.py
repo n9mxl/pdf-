@@ -2,7 +2,7 @@ import streamlit as st
 from pdf_generator import enhance_and_create_pdf
 
 st.set_page_config(page_title="이미지 → 최대 화질 PDF 변환기", layout="wide")
-st.title("📚 이미지 → 최대 화질 PDF 변환기")
+st.title("📚 이미지 → 최대 화질 PDF 변환기 (CPU 전용)")
 
 # 세션 상태 초기화
 if "uploaded_files" not in st.session_state:
