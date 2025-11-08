@@ -1,8 +1,10 @@
 import streamlit as st
 from pdf_generator import enhance_and_create_pdf
+import zipfile
+import io
 
-st.set_page_config(page_title="이미지 → 최대 화질 PDF 변환기", layout="wide")
-st.title("📚 이미지 → 최대 화질 PDF 변환기 (CPU 전용)")
+st.set_page_config(page_title="이미지 → PDF + ZIP 변환기", layout="wide")
+st.title("📚 이미지 → 최대 화질 PDF + ZIP 변환기 (CPU 전용)")
 
 # 세션 상태 초기화
 if "uploaded_files" not in st.session_state:
@@ -27,8 +29,20 @@ if st.session_state.uploaded_files:
 
 # PDF 변환 버튼
 if st.session_state.uploaded_files:
-    if st.button("PDF 변환 (최대 화질)"):
+    if st.button("PDF 변환 + ZIP 압축"):
         with st.spinner("PDF 변환 중... 잠시만 기다려주세요"):
+            # PDF 생성
             pdf_bytes = enhance_and_create_pdf(st.session_state.uploaded_files)
+
+            # ZIP으로 묶기
+            zip_buf = io.BytesIO()
+            with zipfile.ZipFile(zip_buf, "w") as zf:
+                zf.writestr("교과서_highres.pdf", pdf_bytes.getvalue())
+            zip_buf.seek(0)
+
         st.success("PDF 변환 완료 ✅")
-        st.download_button("PDF 다운로드", data=pdf_bytes, file_name="교과서_highres.pdf")
+        st.download_button(
+            "ZIP 다운로드 (PDF 포함)",
+            data=zip_buf,
+            file_name="교과서_highres.zip"
+        )
