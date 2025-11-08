@@ -3,46 +3,60 @@ from pdf_generator import enhance_and_create_pdf
 import zipfile
 import io
 
-st.set_page_config(page_title="이미지 → PDF + ZIP 변환기", layout="wide")
-st.title("📚 이미지 → 최대 화질 PDF + ZIP 변환기 (CPU 전용)")
+st.set_page_config(page_title="이미지 → ZIP → PDF 변환기", layout="wide")
+st.title("📚 이미지 → ZIP → PDF 변환기 (CPU 전용)")
 
-# 세션 상태 초기화
-if "uploaded_files" not in st.session_state:
-    st.session_state.uploaded_files = []
+tabs = st.tabs(["1단계: 이미지 → ZIP", "2단계: ZIP → PDF"])
 
-# 다중 파일 업로드
-uploaded_files = st.file_uploader(
-    "페이지 이미지 선택 (여러 개 선택 가능)", 
-    type=["png","jpg","jpeg"], 
-    accept_multiple_files=True
-)
+# ===============================
+# 1단계: 이미지 → ZIP
+# ===============================
+with tabs[0]:
+    st.header("1단계: 이미지 → ZIP 생성")
+    uploaded_files = st.file_uploader(
+        "이미지 업로드 (여러 장 선택 가능, 최대 40장 이상 가능)", 
+        type=["png","jpg","jpeg"], 
+        accept_multiple_files=True,
+        key="step1"
+    )
 
-# 업로드된 파일을 세션 상태에 저장
-if uploaded_files:
-    st.session_state.uploaded_files = uploaded_files
-
-# 업로드된 이미지 파일 목록 표시
-if st.session_state.uploaded_files:
-    st.write("업로드된 이미지:")
-    for i, file in enumerate(st.session_state.uploaded_files, start=1):
-        st.write(f"{i}. {file.name}")
-
-# PDF 변환 버튼
-if st.session_state.uploaded_files:
-    if st.button("PDF 변환 + ZIP 압축"):
-        with st.spinner("PDF 변환 중... 잠시만 기다려주세요"):
-            # PDF 생성
-            pdf_bytes = enhance_and_create_pdf(st.session_state.uploaded_files)
-
-            # ZIP으로 묶기
+    if uploaded_files:
+        if st.button("ZIP 파일 생성", key="zip_button"):
             zip_buf = io.BytesIO()
             with zipfile.ZipFile(zip_buf, "w") as zf:
-                zf.writestr("교과서_highres.pdf", pdf_bytes.getvalue())
+                for file in uploaded_files:
+                    file.seek(0)
+                    zf.writestr(file.name, file.read())
             zip_buf.seek(0)
+            st.success("ZIP 생성 완료 ✅")
+            st.download_button(
+                "ZIP 다운로드",
+                data=zip_buf,
+                file_name="images.zip"
+            )
 
-        st.success("PDF 변환 완료 ✅")
-        st.download_button(
-            "ZIP 다운로드 (PDF 포함)",
-            data=zip_buf,
-            file_name="교과서_highres.zip"
-        )
+# ===============================
+# 2단계: ZIP → PDF
+# ===============================
+with tabs[1]:
+    st.header("2단계: ZIP → PDF 변환")
+    uploaded_zip = st.file_uploader("ZIP 파일 업로드", type=["zip"], key="step2")
+    images = []
+
+    if uploaded_zip:
+        with zipfile.ZipFile(uploaded_zip) as z:
+            for file_name in z.namelist():
+                if file_name.lower().endswith((".png", ".jpg", ".jpeg")):
+                    img_bytes = io.BytesIO(z.read(file_name))
+                    images.append(img_bytes)
+        st.write(f"{len(images)}개의 이미지가 ZIP에서 로드됨")
+
+        if st.button("PDF 변환", key="pdf_button"):
+            with st.spinner("PDF 변환 중... 잠시만 기다려주세요"):
+                pdf_bytes = enhance_and_create_pdf(images)
+            st.success("PDF 변환 완료 ✅")
+            st.download_button(
+                "PDF 다운로드",
+                data=pdf_bytes,
+                file_name="교과서_highres.pdf"
+            )
