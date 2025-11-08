@@ -1,0 +1,7 @@
+streamlit
+pillow
+img2pdf
+torch          # Real-ESRGAN용
+basicsr        # Real-ESRGAN 의존
+realesrgan     # 업스케일용
+opencv-python
