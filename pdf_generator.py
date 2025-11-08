@@ -14,6 +14,7 @@ def enhance_and_create_pdf(uploaded_files):
     images_for_pdf = []
 
     for file in uploaded_files:
+        file.seek(0)  # Streamlit 업로드 파일 위치 초기화
         img = Image.open(file).convert("RGB")
         img = enhance_highres(img)
 
@@ -22,5 +23,5 @@ def enhance_and_create_pdf(uploaded_files):
         buf.seek(0)
         images_for_pdf.append(buf)
 
-    pdf_bytes = img2pdf.convert([buf for buf in images_for_pdf])
+    pdf_bytes = io.BytesIO(img2pdf.convert([buf for buf in images_for_pdf]))
     return pdf_bytes
